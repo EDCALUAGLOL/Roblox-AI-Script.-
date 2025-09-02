@@ -1,16 +1,25 @@
 loadstring([[
 
--- Universal AI Script (Educational Demo)
+-- Universal AI Demo Script (Educational Purposes)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Player = Players.LocalPlayer
 
+-- AI State
 local AI_ENABLED = true
 local memory = {}
 local customResponses = {}
-local defaultResponses = {greetings={"Hello!","Hi!","Hey there!"},farewell={"Goodbye!","See you!","Take care!"},unknown={"I don't know that yet.","Can you teach me?"}}
 
-local function getRandom(list) return list[math.random(1,#list)] end
+local defaultResponses = {
+    greetings = {"Hello! How are you feeling?", "Hi! I'm here to listen."},
+    sad = {"I understand. It's okay to feel this way.", "Let's talk about it."},
+    happy = {"That's wonderful!", "I'm glad to hear that!"},
+    unknown = {"Can you tell me more?", "I’m here to listen."}
+}
+
+local function getRandom(list)
+    return list[math.random(1,#list)]
+end
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
@@ -19,9 +28,9 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0,300,0,150)
+Frame.Size = UDim2.new(0,400,0,200)
 Frame.Position = UDim2.new(0,10,0,10)
-Frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
 Frame.BackgroundTransparency = 0.2
 Frame.Parent = ScreenGui
 
@@ -50,6 +59,17 @@ OffButton.BackgroundColor3 = Color3.fromRGB(200,0,0)
 OffButton.TextColor3 = Color3.fromRGB(255,255,255)
 OffButton.Parent = Frame
 
+local ChatLog = Instance.new("TextLabel")
+ChatLog.Size = UDim2.new(1,-20,0,80)
+ChatLog.Position = UDim2.new(0,10,0,110)
+ChatLog.BackgroundTransparency = 1
+ChatLog.TextColor3 = Color3.fromRGB(255,255,255)
+ChatLog.TextScaled = true
+ChatLog.TextWrapped = true
+ChatLog.Text = "Chat log will appear here..."
+ChatLog.Parent = Frame
+
+-- Button Functions
 OnButton.MouseButton1Click:Connect(function()
     AI_ENABLED = true
     StatusLabel.Text = "[AI] Enabled"
@@ -62,29 +82,38 @@ OffButton.MouseButton1Click:Connect(function()
     StatusLabel.TextColor3 = Color3.fromRGB(255,0,0)
 end)
 
-local function AI_Respond(playerName,msg)
+-- AI Response Function
+local function AI_Respond(msg)
     if not AI_ENABLED then return end
     local reply = nil
-    for keyword,response in pairs(customResponses) do
-        if msg:lower():find(keyword) then reply=response break end
+
+    for keyword, response in pairs(customResponses) do
+        if msg:lower():find(keyword) then reply = response break end
     end
+
     if not reply then
-        if msg:lower():find("hello") or msg:lower():find("hi") then reply=getRandom(defaultResponses.greetings)
-        elseif msg:lower():find("bye") then reply=getRandom(defaultResponses.farewell)
-        else reply=getRandom(defaultResponses.unknown)
+        if msg:lower():find("sad") then reply = getRandom(defaultResponses.sad)
+        elseif msg:lower():find("happy") then reply = getRandom(defaultResponses.happy)
+        elseif msg:lower():find("hello") or msg:lower():find("hi") then reply = getRandom(defaultResponses.greetings)
+        else reply = getRandom(defaultResponses.unknown)
         end
     end
+
     table.insert(memory,msg)
-    print("[AI Reply to "..playerName.."]: "..reply)
+    ChatLog.Text = ChatLog.Text.."\nPlayer: "..msg.."\nAI: "..reply
+    print("[AI Reply]: "..reply)
+
+    -- Attempt to send message in chat
     pcall(function()
         ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(reply,"All")
     end)
 end
 
--- Demo simulation
-customResponses["science"]="I love science!"
-AI_Respond("Player1","hello")
-AI_Respond("Player2","science")
-AI_Respond("Player3","bye")
+-- Demo Messages
+local demoMessages = {"hello","I feel sad","I am happy","I feel stressed"}
+customResponses["stress"] = "Take a deep breath. Let's relax."
+for _,msg in ipairs(demoMessages) do
+    AI_Respond(msg)
+end
 
 ]])()
