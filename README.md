@@ -1,6 +1,6 @@
 loadstring([[
 
--- Universal AI Script 
+-- Universal AI Script (Educational Demo)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Player = Players.LocalPlayer
